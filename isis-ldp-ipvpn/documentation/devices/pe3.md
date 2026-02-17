@@ -27,7 +27,6 @@
   - [IPv6 Routing](#ipv6-routing)
   - [Static Routes](#static-routes)
   - [Router OSPF](#router-ospf)
-  - [Router ISIS](#router-isis)
   - [Router BGP](#router-bgp)
 - [BFD](#bfd)
   - [Router BFD](#router-bfd)
@@ -185,13 +184,6 @@ vlan internal order ascending range 1006 1199
 | Ethernet3 | P2P_p4_Ethernet3 | - | 10.255.3.24/31 | default | 1500 | False | - | - |
 | Ethernet4 | C2_L3_SERVICE | - | 10.1.1.9/30 | C2_VRF1 | - | False | - | - |
 
-##### ISIS
-
-| Interface | Channel Group | ISIS Instance | ISIS BFD | ISIS Metric | Mode | ISIS Circuit Type | Hello Padding | ISIS Authentication Mode |
-| --------- | ------------- | ------------- | -------- | ----------- | ---- | ----------------- | ------------- | ------------------------ |
-| Ethernet1 | - | CORE | - | 50 | point-to-point | level-2 | True | md5 |
-| Ethernet3 | - | CORE | - | 50 | point-to-point | level-2 | True | md5 |
-
 #### Ethernet Interfaces Device Configuration
 
 ```eos
@@ -205,13 +197,8 @@ interface Ethernet1
    mpls ldp igp sync
    mpls ldp interface
    mpls ip
-   isis enable CORE
-   isis circuit-type level-2
-   isis metric 50
-   isis hello padding
-   isis network point-to-point
-   isis authentication mode md5
-   isis authentication key 7 <removed>
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 !
 interface Ethernet2
    description C1_L3_SERVICE
@@ -230,13 +217,8 @@ interface Ethernet3
    mpls ldp igp sync
    mpls ldp interface
    mpls ip
-   isis enable CORE
-   isis circuit-type level-2
-   isis metric 50
-   isis hello padding
-   isis network point-to-point
-   isis authentication mode md5
-   isis authentication key 7 <removed>
+   ip ospf network point-to-point
+   ip ospf area 0.0.0.0
 !
 interface Ethernet4
    description C2_L3_SERVICE
@@ -262,12 +244,6 @@ interface Ethernet4
 | --------- | ----------- | --- | ------------ |
 | Loopback0 | ROUTER_ID | default | - |
 
-##### ISIS
-
-| Interface | ISIS instance | ISIS metric | Interface mode |
-| --------- | ------------- | ----------- | -------------- |
-| Loopback0 | CORE | - | passive |
-
 #### Loopback Interfaces Device Configuration
 
 ```eos
@@ -277,8 +253,7 @@ interface Loopback0
    no shutdown
    ip address 10.255.1.3/32
    mpls ldp interface
-   isis enable CORE
-   isis passive
+   ip ospf area 0.0.0.0
 ```
 
 ## Routing
@@ -359,6 +334,7 @@ ip route vrf MGMT 0.0.0.0/0 172.16.1.1
 | Process ID | Router ID | Default Passive Interface | No Passive Interface | BFD | Max LSA | Default Information Originate | Log Adjacency Changes Detail | Auto Cost Reference Bandwidth | Maximum Paths | MPLS LDP Sync Default | Distribute List In |
 | ---------- | --------- | ------------------------- | -------------------- | --- | ------- | ----------------------------- | ---------------------------- | ----------------------------- | ------------- | --------------------- | ------------------ |
 | 10 | 10.255.1.3 | enabled | Ethernet2 <br> | disabled | default | disabled | disabled | - | - | - | - |
+| 100 | 10.255.1.3 | enabled | Ethernet1 <br> Ethernet3 <br> | disabled | 12000 | disabled | disabled | - | - | - | - |
 
 #### Router OSPF Router Redistribution
 
@@ -370,7 +346,10 @@ ip route vrf MGMT 0.0.0.0/0 172.16.1.1
 
 | Interface | Area | Cost | Point To Point |
 | -------- | -------- | -------- | -------- |
+| Ethernet1 | 0.0.0.0 | - | True |
 | Ethernet2 | 0.0.0.0 | - | False |
+| Ethernet3 | 0.0.0.0 | - | True |
+| Loopback0 | 0.0.0.0 | - | - |
 
 #### Router OSPF Device Configuration
 
@@ -381,50 +360,13 @@ router ospf 10 vrf C1_VRF1
    passive-interface default
    no passive-interface Ethernet2
    redistribute bgp
-```
-
-### Router ISIS
-
-#### Router ISIS Summary
-
-| Settings | Value |
-| -------- | ----- |
-| Instance | CORE |
-| Net-ID | 49.0001.0102.5500.1003.00 |
-| Type | level-2 |
-| Router-ID | 10.255.1.3 |
-| Log Adjacency Changes | True |
-| MPLS LDP Sync Default | True |
-
-#### ISIS Interfaces Summary
-
-| Interface | ISIS Instance | ISIS Metric | Interface Mode |
-| --------- | ------------- | ----------- | -------------- |
-| Ethernet1 | CORE | 50 | point-to-point |
-| Ethernet3 | CORE | 50 | point-to-point |
-| Loopback0 | CORE | - | passive |
-
-#### ISIS IPv4 Address Family Summary
-
-| Settings | Value |
-| -------- | ----- |
-| IPv4 Address-family Enabled | True |
-| Maximum-paths | 4 |
-
-#### Router ISIS Device Configuration
-
-```eos
 !
-router isis CORE
-   net 49.0001.0102.5500.1003.00
-   router-id ipv4 10.255.1.3
-   is-type level-2
-   log-adjacency-changes
-   mpls ldp sync default
-   !
-   address-family ipv4 unicast
-      maximum-paths 4
-   !
+router ospf 100
+   router-id 10.255.1.3
+   passive-interface default
+   no passive-interface Ethernet1
+   no passive-interface Ethernet3
+   max-lsa 12000
 ```
 
 ### Router BGP
@@ -468,9 +410,9 @@ ASN Notation: asplain
 
 ##### VPN-IPv4 Peer Groups
 
-| Peer Group | Activate | Route-map In | Route-map Out | RCF In | RCF Out |
-| ---------- | -------- | ------------ | ------------- | ------ | ------- |
-| MPLS-OVERLAY-PEERS | True | - | - | - | - |
+| Peer Group | Activate | Route-map In | Route-map Out | RCF In | RCF Out | Peer-tag In | Peer-tag Out |
+| ---------- | -------- | ------------ | ------------- | ------ | ------- | ----------- | ------------ |
+| MPLS-OVERLAY-PEERS | True | - | - | - | - | - | - |
 
 #### Router BGP VRFs
 

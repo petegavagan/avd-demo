@@ -9,16 +9,8 @@ ethernet_interfaces:
   shutdown: false
   mtu: 1500
   ip_address: 10.255.3.19/31
-  isis_enable: CORE
-  isis_metric: 50
-  isis_network_point_to_point: true
-  isis_circuit_type: level-2
-  isis_hello_padding: true
-  isis_authentication:
-    both:
-      key_type: '7'
-      key: $1c$sTNAlR6rKSw=
-      mode: md5
+  ospf_network_point_to_point: true
+  ospf_area: 0.0.0.0
   mpls:
     ip: true
     ldp:
@@ -34,16 +26,8 @@ ethernet_interfaces:
   shutdown: false
   mtu: 1500
   ip_address: 10.255.3.21/31
-  isis_enable: CORE
-  isis_metric: 50
-  isis_network_point_to_point: true
-  isis_circuit_type: level-2
-  isis_hello_padding: true
-  isis_authentication:
-    both:
-      key_type: '7'
-      key: $1c$sTNAlR6rKSw=
-      mode: md5
+  ospf_network_point_to_point: true
+  ospf_area: 0.0.0.0
   mpls:
     ip: true
     ldp:
@@ -59,16 +43,8 @@ ethernet_interfaces:
   shutdown: false
   mtu: 1500
   ip_address: 10.255.3.25/31
-  isis_enable: CORE
-  isis_metric: 50
-  isis_network_point_to_point: true
-  isis_circuit_type: level-2
-  isis_hello_padding: true
-  isis_authentication:
-    both:
-      key_type: '7'
-      key: $1c$sTNAlR6rKSw=
-      mode: md5
+  ospf_network_point_to_point: true
+  ospf_area: 0.0.0.0
   mpls:
     ip: true
     ldp:
@@ -81,7 +57,6 @@ ethernet_interfaces:
     enabled: false
 hostname: p4
 ip_routing: true
-is_deployed: true
 local_users:
 - name: admin
   privilege: 15
@@ -96,11 +71,10 @@ loopback_interfaces:
   description: ROUTER_ID
   shutdown: false
   ip_address: 10.255.0.4/32
+  ospf_area: 0.0.0.0
   mpls:
     ldp:
       interface: true
-  isis_enable: CORE
-  isis_passive: true
 management_api_http:
   enable_https: true
   enable_vrfs:
@@ -117,6 +91,7 @@ management_security:
   password:
     encryption_key_common: true
 metadata:
+  is_deployed: true
   platform: vEOS-lab
   fabric_name: FABRIC
 mpls:
@@ -126,16 +101,17 @@ mpls:
     router_id: 10.255.0.4
     shutdown: false
     transport_address_interface: Loopback0
-router_isis:
-  instance: CORE
-  net: 49.0001.0102.5500.0004.00
-  router_id: 10.255.0.4
-  is_type: level-2
-  log_adjacency_changes: true
-  mpls_ldp_sync_default: true
-  address_family_ipv4:
-    enabled: true
-    maximum_paths: 4
+router_ospf:
+  process_ids:
+  - id: 100
+    passive_interface_default: true
+    router_id: 10.255.0.4
+    bfd_enable: false
+    no_passive_interfaces:
+    - Ethernet2
+    - Ethernet4
+    - Ethernet3
+    max_lsa: 12000
 service_routing_protocols_model: multi-agent
 spanning_tree:
   mode: none
