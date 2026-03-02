@@ -16,9 +16,10 @@ ethernet_interfaces:
     ldp:
       interface: true
       igp_sync: true
-  peer: p2
-  peer_interface: Ethernet1
-  peer_type: p
+  metadata:
+    peer: p2
+    peer_interface: Ethernet1
+    peer_type: p
   switchport:
     enabled: false
 - name: Ethernet2
@@ -33,9 +34,10 @@ ethernet_interfaces:
     ldp:
       interface: true
       igp_sync: true
-  peer: p1
-  peer_interface: Ethernet2
-  peer_type: p
+  metadata:
+    peer: p1
+    peer_interface: Ethernet2
+    peer_type: p
   switchport:
     enabled: false
 - name: Ethernet4.10
@@ -47,7 +49,8 @@ ethernet_interfaces:
   ip_address: 10.0.1.2/29
   ospf_network_point_to_point: false
   ospf_area: 0.0.0.0
-  peer_type: l3_interface
+  metadata:
+    peer_type: l3_interface
 - name: Ethernet4.20
   description: C2_L3_SERVICE
   shutdown: false
@@ -55,10 +58,12 @@ ethernet_interfaces:
   encapsulation_dot1q:
     vlan: 20
   ip_address: 10.1.1.2/29
-  peer_type: l3_interface
+  metadata:
+    peer_type: l3_interface
 - name: Ethernet4
   shutdown: false
-  peer_type: l3_interface
+  metadata:
+    peer_type: l3_interface
   switchport:
     enabled: false
 hostname: pe2
@@ -66,15 +71,6 @@ ip_igmp_snooping:
   globally_enabled: true
 ip_routing: true
 ip_virtual_router_mac_address: 00:1c:73:00:dc:00
-local_users:
-- name: admin
-  privilege: 15
-  role: network-admin
-  no_password: true
-- name: arista
-  privilege: 15
-  role: network-admin
-  sha512_password: $6$Enl0WfE32FthwyiJ$yTyGaEJ2uPKLU.F7314YtB7J1jrzrMi7ogXIRTEHQfLdLgKWWmr1UvNlZLN6AyuxET7G5aH3AI9OYRzxVTkB1.
 loopback_interfaces:
 - name: Loopback0
   description: ROUTER_ID
@@ -84,10 +80,6 @@ loopback_interfaces:
   mpls:
     ldp:
       interface: true
-management_api_http:
-  enable_https: true
-  enable_vrfs:
-  - name: MGMT
 management_interfaces:
 - name: Management1
   description: OOB_MANAGEMENT
@@ -103,6 +95,8 @@ metadata:
   is_deployed: true
   platform: vEOS-lab
   fabric_name: FABRIC
+  validate_hardware:
+    enabled: false
 mpls:
   ip: true
   ldp:
@@ -124,13 +118,13 @@ router_bgp:
     local_routes: 200
   maximum_paths:
     paths: 4
-    ecmp: 4
   bgp:
     default:
       ipv4_unicast: false
   peer_groups:
   - name: MPLS-OVERLAY-PEERS
-    type: mpls
+    metadata:
+      type: mpls
     remote_as: '65001'
     update_source: Loopback0
     bfd: true
@@ -140,11 +134,13 @@ router_bgp:
   neighbors:
   - ip_address: 10.255.2.1
     peer_group: MPLS-OVERLAY-PEERS
-    peer: rr1
+    metadata:
+      peer: rr1
     description: rr1_Loopback0
   - ip_address: 10.255.2.2
     peer_group: MPLS-OVERLAY-PEERS
-    peer: rr2
+    metadata:
+      peer: rr2
     description: rr2_Loopback0
   address_family_ipv4:
     peer_groups:
@@ -209,6 +205,8 @@ router_ospf:
     - Ethernet1
     - Ethernet2
     max_lsa: 12000
+    graceful_restart:
+      enabled: true
   - id: 10
     vrf: C1_VRF1
     passive_interface_default: true
@@ -236,7 +234,11 @@ vrfs:
   ip_routing: false
 - name: C1_VRF1
   ip_routing: true
-  tenant: CUSTOMER1
+  metadata:
+    tenants:
+    - CUSTOMER1
 - name: C2_VRF1
   ip_routing: true
-  tenant: CUSTOMER2
+  metadata:
+    tenants:
+    - CUSTOMER2

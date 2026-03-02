@@ -28,7 +28,7 @@ underlay_routing_protocol: ospf-ldp
 overlay_routing_protocol: ibgp
 
 # Local users
-local_users:
+aaa.settings.local_users:
   # Username with no password configured
   - name: admin
     privilege: 15
