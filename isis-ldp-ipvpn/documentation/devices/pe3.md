@@ -4,9 +4,7 @@
 
 - [Management](#management)
   - [Management Interfaces](#management-interfaces)
-  - [Management API HTTP](#management-api-http)
 - [Authentication](#authentication)
-  - [Local Users](#local-users)
   - [Enable Password](#enable-password)
 - [Management Security](#management-security)
   - [Management Security Summary](#management-security-summary)
@@ -69,50 +67,7 @@ interface Management1
    ip address 172.16.1.103/24
 ```
 
-### Management API HTTP
-
-#### Management API HTTP Summary
-
-| HTTP | HTTPS | UNIX-Socket | Default Services |
-| ---- | ----- | ----------- | ---------------- |
-| False | True | - | - |
-
-#### Management API VRF Access
-
-| VRF Name | IPv4 ACL | IPv6 ACL |
-| -------- | -------- | -------- |
-| MGMT | - | - |
-
-#### Management API HTTP Device Configuration
-
-```eos
-!
-management api http-commands
-   protocol https
-   no shutdown
-   !
-   vrf MGMT
-      no shutdown
-```
-
 ## Authentication
-
-### Local Users
-
-#### Local Users Summary
-
-| User | Privilege | Role | Disabled | Shell |
-| ---- | --------- | ---- | -------- | ----- |
-| admin | 15 | network-admin | False | - |
-| arista | 15 | network-admin | False | - |
-
-#### Local Users Device Configuration
-
-```eos
-!
-username admin privilege 15 role network-admin nopassword
-username arista privilege 15 role network-admin secret sha512 <removed>
-```
 
 ### Enable Password
 
@@ -152,7 +107,7 @@ spanning-tree mode none
 ### Internal VLAN Allocation Policy Summary
 
 | Policy Allocation | Range Beginning | Range Ending |
-| ------------------| --------------- | ------------ |
+| ----------------- | --------------- | ------------ |
 | ascending | 1006 | 1199 |
 
 ### Internal VLAN Allocation Policy Device Configuration
@@ -177,8 +132,8 @@ vlan internal order ascending range 1006 1199
 
 ##### IPv4
 
-| Interface | Description | Channel Group | IP Address | VRF |  MTU | Shutdown | ACL In | ACL Out |
-| --------- | ----------- | ------------- | ---------- | ----| ---- | -------- | ------ | ------- |
+| Interface | Description | Channel Group | IP Address | VRF | MTU | Shutdown | ACL In | ACL Out |
+| --------- | ----------- | ------------- | ---------- | --- | --- | -------- | ------ | ------- |
 | Ethernet1 | P2P_p3_Ethernet1 | - | 10.255.3.22/31 | default | 1500 | False | - | - |
 | Ethernet2 | C1_L3_SERVICE | - | 10.0.1.9/30 | C1_VRF1 | - | False | - | - |
 | Ethernet3 | P2P_p4_Ethernet3 | - | 10.255.3.24/31 | default | 1500 | False | - | - |
@@ -333,8 +288,8 @@ ip route vrf MGMT 0.0.0.0/0 172.16.1.1
 
 | Process ID | Router ID | Default Passive Interface | No Passive Interface | BFD | Max LSA | Default Information Originate | Log Adjacency Changes Detail | Auto Cost Reference Bandwidth | Maximum Paths | MPLS LDP Sync Default | Distribute List In |
 | ---------- | --------- | ------------------------- | -------------------- | --- | ------- | ----------------------------- | ---------------------------- | ----------------------------- | ------------- | --------------------- | ------------------ |
-| 10 | 10.255.1.3 | enabled | Ethernet2 <br> | disabled | default | disabled | disabled | - | - | - | - |
-| 100 | 10.255.1.3 | enabled | Ethernet1 <br> Ethernet3 <br> | disabled | 12000 | disabled | disabled | - | - | - | - |
+| 10 | 10.255.1.3 | enabled | Ethernet2 | disabled | default | disabled | disabled | - | - | - | - |
+| 100 | 10.255.1.3 | enabled | Ethernet1<br>Ethernet3 | disabled | 12000 | disabled | disabled | - | - | - | - |
 
 #### Router OSPF Router Redistribution
 
@@ -367,6 +322,7 @@ router ospf 100
    no passive-interface Ethernet1
    no passive-interface Ethernet3
    max-lsa 12000
+   graceful-restart
 ```
 
 ### Router BGP
@@ -383,7 +339,7 @@ ASN Notation: asplain
 | ---------- |
 | no bgp default ipv4-unicast |
 | distance bgp 20 200 200 |
-| maximum-paths 4 ecmp 4 |
+| maximum-paths 4 |
 
 #### Router BGP Peer Groups
 
@@ -429,7 +385,7 @@ router bgp 65001
    router-id 10.255.1.3
    no bgp default ipv4-unicast
    distance bgp 20 200 200
-   maximum-paths 4 ecmp 4
+   maximum-paths 4
    neighbor MPLS-OVERLAY-PEERS peer group
    neighbor MPLS-OVERLAY-PEERS remote-as 65001
    neighbor MPLS-OVERLAY-PEERS update-source Loopback0
